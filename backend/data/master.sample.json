@@ -1,0 +1,74 @@
+{
+    "servers": [
+        {
+            "id": "placeholder-id",
+            "name": "Sample Server Name",
+            "type": "kubernetes",
+            "environment": "dev",
+            "connection_coordinates": {
+                "method": "kubeconfig",
+                "host": "0.0.0.0",
+                "port": 16443,
+                "kubeconfig_data": {
+                    "kind": "Config",
+                    "apiVersion": "v1",
+                    "clusters": [
+                        {
+                            "name": "sample-cluster",
+                            "cluster": {
+                                "server": "https://sample-dns.azmk8s.io:443",
+                                "certificate-authority-data": "PLACEHOLDER_CA_DATA"
+                            }
+                        }
+                    ],
+                    "users": [
+                        {
+                            "name": "sample-user",
+                            "user": {
+                                "client-certificate-data": "PLACEHOLDER_CERT_DATA",
+                                "client-key-data": "PLACEHOLDER_KEY_DATA",
+                                "token": "PLACEHOLDER_TOKEN"
+                            }
+                        }
+                    ],
+                    "contexts": [
+                        {
+                            "name": "sample-context",
+                            "context": {
+                                "cluster": "sample-cluster",
+                                "user": "sample-user"
+                            }
+                        }
+                    ],
+                    "current-context": "sample-context"
+                }
+            },
+            "resources": {
+                "total": {
+                    "cpus": 4,
+                    "ram_gb": 8,
+                    "storage_gb": 50,
+                    "gpus": 0
+                },
+                "allocated": {
+                    "cpus": 0,
+                    "ram_gb": 0,
+                    "storage_gb": 0,
+                    "gpus": 0
+                },
+                "available": {
+                    "cpus": 4,
+                    "ram_gb": 8,
+                    "storage_gb": 50,
+                    "gpus": 0
+                }
+            },
+            "pods": [],
+            "status": "Offline"
+        }
+    ],
+    "config": {
+        "ui_refresh_interval": 5,
+        "auto_refresh_enabled": true
+    }
+}

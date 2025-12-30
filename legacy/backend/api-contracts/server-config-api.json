@@ -1,0 +1,283 @@
+{
+  "name": "Server Configuration API",
+  "version": "1.0.0",
+  "description": "API contract for server configuration and management",
+  "base_url": "http://localhost:5005",
+  "endpoints": {
+    "list_servers": {
+      "method": "GET",
+      "path": "/api/server-config/servers",
+      "description": "List all configured servers",
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the request was successful"
+          },
+          "servers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique server identifier"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Server display name"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["kubernetes", "docker", "other"],
+                  "description": "Server type"
+                },
+                "environment": {
+                  "type": "string",
+                  "enum": ["development", "staging", "production"],
+                  "description": "Server environment"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["online", "offline", "error"],
+                  "description": "Current server status"
+                },
+                "connection_coordinates": {
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string",
+                      "enum": ["kubeconfig", "ssh", "http"],
+                      "description": "Connection method"
+                    },
+                    "host": {
+                      "type": "string",
+                      "description": "Server host/IP"
+                    },
+                    "port": {
+                      "type": "integer",
+                      "description": "Connection port"
+                    },
+                    "username": {
+                      "type": "string",
+                      "description": "Authentication username"
+                    },
+                    "insecure_skip_tls_verify": {
+                      "type": "boolean",
+                      "description": "Skip TLS verification"
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "description": "Server location"
+                    },
+                    "setup_method": {
+                      "type": "string",
+                      "description": "How the server was configured"
+                    },
+                    "configured_by": {
+                      "type": "string",
+                      "description": "Who configured the server"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "configure_server": {
+      "method": "POST",
+      "path": "/api/server-config/configure",
+      "description": "Configure a new server",
+      "request": {
+        "type": "object",
+        "required": ["vm_ip", "password"],
+        "properties": {
+          "vm_ip": {
+            "type": "string",
+            "description": "Azure VM IP address"
+          },
+          "password": {
+            "type": "string",
+            "description": "VM authentication password"
+          },
+          "username": {
+            "type": "string",
+            "default": "azureuser",
+            "description": "VM authentication username"
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional server display name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional server description"
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "server_id": {
+            "type": "string",
+            "description": "Generated server identifier"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success/error message"
+          }
+        }
+      }
+    },
+    "test_connection": {
+      "method": "GET",
+      "path": "/api/server-config/servers/{server_id}/test",
+      "description": "Test server connection",
+      "parameters": {
+        "server_id": {
+          "type": "string",
+          "description": "Server identifier to test"
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["online", "offline", "error"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "kubeconfig_valid": {
+                "type": "boolean"
+              },
+              "cluster_accessible": {
+                "type": "boolean"
+              },
+              "nodes_count": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "get_templates": {
+      "method": "GET",
+      "path": "/api/server-config/templates",
+      "description": "List available server templates",
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "templates": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "environment": {
+                  "type": "string"
+                },
+                "required_fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "optional_fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "error_responses": {
+    "400": {
+      "description": "Bad Request - Invalid input data",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "details": {
+            "type": "object",
+            "description": "Validation error details"
+          }
+        }
+      }
+    },
+    "404": {
+      "description": "Not Found - Server or resource not found",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      }
+    },
+    "500": {
+      "description": "Internal Server Error",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      }
+    }
+  }
+} 

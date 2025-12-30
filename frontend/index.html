@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Resource Manager V3</title>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                            600: '#475569',
+                        },
+                        primary: '#3b82f6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased">
+    <div id="app" class="p-4 md:p-8 max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
+                🚀 Server Resource Manager
+            </h1>
+            <div class="flex items-center gap-4">
+                <div v-if="lastUpdated" class="text-sm text-gray-400">
+                    Updated: {{ lastUpdated.toLocaleTimeString() }}
+                </div>
+                <!-- Action: Home (if deep in view) -->
+                <button v-if="currentView === 'detail'" @click="goHome"
+                    class="px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors">
+                    ← Back to Servers
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+
+        <!-- Loading State -->
+        <div v-if="loading && !servers.length" class="flex justify-center items-center h-64">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+
+        <!-- Server Grid (List View) -->
+        <div v-if="currentView === 'list'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-for="server in servers" :key="server.id"
+                class="card rounded-xl p-6 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 cursor-pointer group"
+                @click="selectServer(server)">
+
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <!-- Requested: Show ID as Name -->
+                        <h2 class="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">{{
+                            server.id }}</h2>
+                        <span class="text-xs text-gray-400 uppercase tracking-wider">{{ server.environment }}</span>
+                    </div>
+                    <div :class="{'bg-green-500/20 text-green-400': server.status === 'Online', 'bg-red-500/20 text-red-400': server.status !== 'Online'}"
+                        class="px-2 py-1 rounded text-xs font-bold">
+                        {{ server.status }}
+                    </div>
+                </div>
+
+                <!-- Resource Mini-Bars -->
+                <div class="space-y-3">
+                    <resource-bar label="CPU" :alloc="server.resources.allocated.cpus"
+                        :total="server.resources.total.cpus" unit="Cores"></resource-bar>
+                    <resource-bar label="RAM" :alloc="server.resources.allocated.ram_gb"
+                        :total="server.resources.total.ram_gb" unit="GB"></resource-bar>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center text-sm">
+                    <span class="text-gray-400">Pods Running</span>
+                    <span class="font-bold text-white text-lg">{{ server.pods.length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Server Detail (Detail View) -->
+        <div v-if="currentView === 'detail' && selectedServer" class="space-y-6">
+
+            <!-- Server Header Card -->
+            <div class="card rounded-xl p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">{{ selectedServer.id }}</h2>
+                        <p class="text-sm text-gray-400">{{ selectedServer.name }} • {{
+                            selectedServer.connection_coordinates.host }}</p>
+                    </div>
+                    <button @click="openCreateModal"
+                        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium shadow-lg shadow-blue-600/20 transition-all transform hover:scale-105">
+                        + Launch Pod
+                    </button>
+                </div>
+
+                <!-- Detailed Resources -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <resource-card title="CPU Usage" :alloc="selectedServer.resources.allocated.cpus"
+                        :total="selectedServer.resources.total.cpus" unit="Cores" icon="cpu"></resource-card>
+                    <resource-card title="RAM Usage" :alloc="selectedServer.resources.allocated.ram_gb"
+                        :total="selectedServer.resources.total.ram_gb" unit="GB" icon="memory"></resource-card>
+                    <resource-card title="Storage" :alloc="selectedServer.resources.allocated.storage_gb"
+                        :total="selectedServer.resources.total.storage_gb" unit="GB" icon="disc"></resource-card>
+                </div>
+            </div>
+
+            <!-- Pods Table -->
+            <div class="card rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-gray-700">
+                    <h3 class="font-bold text-lg">Active Deployments</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-gray-400 text-sm border-b border-gray-700/50">
+                                <th class="p-4 font-medium">Pod ID</th>
+                                <th class="p-4 font-medium">Status</th>
+                                <th class="p-4 font-medium">Image</th>
+                                <th class="p-4 font-medium">Route</th>
+                                <th class="p-4 font-medium">Resources</th>
+                                <th class="p-4 font-medium text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-if="!selectedServer.pods.length">
+                                <td colspan="5" class="p-8 text-center text-gray-500">No active pods on this server.
+                                </td>
+                            </tr>
+                            <tr v-for="pod in selectedServer.pods" :key="pod.pod_id"
+                                class="border-b border-gray-700/50 hover:bg-white/5 transition-colors">
+                                <td class="p-4 font-mono text-sm text-blue-300">{{ pod.pod_id }}</td>
+                                <td class="p-4">
+                                    <span :class="{
+                                        'bg-green-500/20 text-green-400': pod.status === 'running',
+                                        'bg-yellow-500/20 text-yellow-400 animate-pulse': pod.status === 'provisioning',
+                                        'bg-red-500/20 text-red-400': pod.status === 'error'
+                                    }" class="px-2 py-1 rounded text-xs font-bold uppercase">
+                                        {{ pod.status }}
+                                    </span>
+                                </td>
+                                <td class="p-4">
+                                    <!-- Editable Image Field -->
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" v-model="pod._editingImage" :placeholder="pod.image_url"
+                                            @focus="pod._editingImage = pod.image_url"
+                                            class="bg-dark-900 border border-gray-700 rounded px-2 py-1 text-sm text-gray-300 w-48 focus:border-blue-500 focus:outline-none transition-colors">
+                                        <button v-if="pod._editingImage && pod._editingImage !== pod.image_url"
+                                            @click="updatePod(pod)"
+                                            class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded shadow">
+                                            Update
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-sm">
+                                    <a v-if="pod.external_ip && pod.route"
+                                        :href="'http://' + pod.external_ip + pod.route" target="_blank"
+                                        class="text-blue-400 hover:text-blue-300 underline flex items-center gap-1">
+                                        {{ pod.route }} ↗
+                                    </a>
+                                    <span v-else-if="pod.route" class="text-gray-500">{{ pod.route }}</span>
+                                    <span v-else class="text-gray-600">-</span>
+                                </td>
+                                <td class="p-4 text-sm text-gray-400">
+                                    {{ pod.requested.cpus }} CPU / {{ pod.requested.ram_gb }} GB
+                                </td>
+                                <td class="p-4 text-right flex justify-end gap-2">
+                                    <button @click="scanPod(pod)"
+                                        class="text-gray-400 hover:text-emerald-400 transition-colors p-1"
+                                        title="Security Scan">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                        </svg>
+                                    </button>
+                                    <button @click="showLogs(pod)"
+                                        class="text-gray-400 hover:text-blue-400 transition-colors p-1"
+                                        title="View Logs">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                        </svg>
+                                    </button>
+                                    <button @click="deletePod(pod)"
+                                        class="text-gray-400 hover:text-red-400 transition-colors p-1"
+                                        title="Delete Pod">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 6h18" />
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Modal -->
+        <div v-if="showCreateModal"
+            class="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+            <div class="card bg-dark-800 rounded-xl p-6 w-full max-w-lg shadow-2xl scale-100 transition-transform">
+                <h2 class="text-xl font-bold mb-4">Launch New Pod</h2>
+
+                <form @submit.prevent="submitCreatePod" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Pod ID</label>
+                            <input v-model="newPod.pod_id" type="text" placeholder="e.g. worker-01"
+                                class="w-full bg-dark-900 border border-gray-700 rounded p-2 text-white focus:border-blue-500 outline-none"
+                                required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Image</label>
+                            <input v-model="newPod.image_url" type="text" placeholder="nginx:latest"
+                                class="w-full bg-dark-900 border border-gray-700 rounded p-2 text-white focus:border-blue-500 outline-none"
+                                required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Namespace (Optional)</label>
+                        <input v-model="newPod.namespace" type="text" placeholder="Defaults to Pod ID"
+                            class="w-full bg-dark-900 border border-gray-700 rounded p-2 text-white focus:border-blue-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Route (Optional)</label>
+                        <input v-model="newPod.route" type="text" placeholder="/my-app"
+                            class="w-full bg-dark-900 border border-gray-700 rounded p-2 text-white focus:border-blue-500 outline-none">
+                        <p class="text-xs text-gray-500 mt-1">Exposes the pod via Ingress.</p>
+                    </div>
+
+                    <div class="p-3 bg-dark-900 rounded border border-gray-700">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Resources</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <span class="text-xs text-gray-500 block">CPU</span>
+                                <input v-model.number="newPod.requested.cpus" type="number" step="0.1"
+                                    class="w-full bg-transparent border-b border-gray-600 focus:border-blue-500 outline-none text-white font-mono">
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 block">RAM (GB)</span>
+                                <input v-model.number="newPod.requested.ram_gb" type="number" step="0.1"
+                                    class="w-full bg-transparent border-b border-gray-600 focus:border-blue-500 outline-none text-white font-mono">
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 block">Storage</span>
+                                <input v-model.number="newPod.requested.storage_gb" type="number" step="0.1"
+                                    class="w-full bg-transparent border-b border-gray-600 focus:border-blue-500 outline-none text-white font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" @click="showCreateModal = false"
+                            class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
+                        <button type="submit"
+                            class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium shadow-lg shadow-blue-600/20"
+                            :disabled="creating">
+                            {{ creating ? 'Deploying...' : 'Deploy Pod' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Logs Modal -->
+        <div v-if="showLogsModal"
+            class="fixed inset-0 bg-black/90 backdrop-blur-md flex justify-center items-center z-50 p-4">
+            <div class="card bg-dark-800 rounded-xl p-6 w-full max-w-4xl max-h-[80vh] flex flex-col shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold">Pod Logs: {{ logPodId }}</h2>
+                        <p class="text-sm text-gray-400">Real-time container output (Refreshes every 3s)</p>
+                    </div>
+                    <button @click="closeLogs" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+
+                <div ref="logContainer"
+                    class="flex-1 bg-black rounded border border-gray-700 p-4 font-mono text-sm overflow-y-auto text-green-400 scroll-smooth">
+                    <pre v-if="logs">{{ logs }}</pre>
+                    <div v-else class="text-gray-600 italic">No logs available or loading...</div>
+                </div>
+
+                <div class="mt-4 flex justify-between items-center">
+                    <div class="text-xs text-gray-500">
+                        Pod: {{ logPodId }} • Server: {{ selectedServer.id }}
+                    </div>
+                    <button @click="closeLogs"
+                        class="px-6 py-2 bg-dark-700 hover:bg-dark-600 rounded font-medium">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Modal -->
+        <div v-if="showSecurityModal"
+            class="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+            <div class="card bg-dark-800 rounded-xl p-6 w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold">Image Security Scan</h2>
+                            <p class="text-sm text-gray-400">{{ scanResult?.image }}</p>
+                        </div>
+                    </div>
+                    <button @click="showSecurityModal = false"
+                        class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+
+                <div v-if="scanning" class="flex-1 flex flex-col items-center justify-center py-6">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500 mb-4"></div>
+                    <p class="text-gray-300">Trivy is performing deep image inspection...</p>
+                    <p class="text-xs text-gray-500 mt-2">Captured Activity:</p>
+
+                    <!-- Real-time Logs -->
+                    <div
+                        class="mt-4 w-full bg-black/50 rounded border border-gray-700 p-3 font-mono text-[10px] text-emerald-400/80 overflow-y-auto max-h-40">
+                        <div v-for="(line, idx) in scanLogs" :key="idx">{{ line }}</div>
+                        <div v-if="!scanLogs.length" class="text-gray-600 italic">Waiting for logs...</div>
+                    </div>
+                </div>
+
+                <div v-else-if="scanResult" class="flex-1 overflow-y-auto space-y-6">
+                    <!-- Show error if any -->
+                    <div v-if="scanResult.error"
+                        class="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm">
+                        <strong>Scan Failed:</strong> {{ scanResult.error }}
+                    </div>
+
+                    <!-- Summary Stats -->
+                    <div v-if="!scanResult.error" class="grid grid-cols-4 gap-4">
+                        <div v-for="(count, severity) in scanResult.summary" :key="severity"
+                            class="p-3 rounded-lg border border-gray-700 bg-dark-900 text-center">
+                            <span :class="{
+                        'text-red-500': severity === 'Critical',
+                        'text-orange-500': severity === 'High',
+                        'text-yellow-500': severity === 'Medium',
+                        'text-blue-500': severity === 'Low',
+                        'text-gray-500': severity === 'Unknown'
+                    }" class="block text-2xl font-bold">{{ count }}</span>
+                            <span class="text-[10px] uppercase font-bold text-gray-500">{{ severity }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Vulnerability List -->
+                    <div v-if="scanResult.vulnerabilities?.length">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase mb-3">Top Vulnerabilities</h3>
+                        <div class="space-y-2">
+                            <div v-for="v in scanResult.vulnerabilities" :key="v.id"
+                                class="p-3 bg-dark-900 border border-gray-700 rounded-lg flex justify-between items-center text-sm">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-mono text-blue-400">{{ v.id }}</span>
+                                        <span class="text-gray-500">•</span>
+                                        <span class="text-gray-300">{{ v.pkg }}</span>
+                                    </div>
+                                    <div class="text-xs text-gray-500 truncate max-w-md">{{ v.title }}</div>
+                                </div>
+                                <span :class="{
+                            'bg-red-500/20 text-red-400': v.severity === 'Critical',
+                            'bg-orange-500/20 text-orange-400': v.severity === 'High',
+                            'bg-yellow-500/20 text-yellow-400': v.severity === 'Medium',
+                            'bg-blue-500/20 text-blue-400': v.severity === 'Low'
+                        }" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                                    {{ v.severity }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="text-center py-8 text-gray-500 italic">
+                        ✅ No vulnerabilities found! This image is clean.
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button @click="showSecurityModal = false"
+                        class="px-6 py-2 bg-dark-700 hover:bg-dark-600 text-white rounded font-medium transition-colors">
+                        Close Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Logic -->
+    <script src="app.js"></script>
+</body>
+
+</html>

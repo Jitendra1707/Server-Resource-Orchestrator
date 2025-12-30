@@ -1,0 +1,70 @@
+{
+  "name": "POST Update Pod - Update Resources",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"pod-101\",\n  \"requested\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 200\n  }\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/update",
+      "host": ["{{base_url}}"],
+      "path": ["update"]
+    },
+    "description": "Updates the resource allocation for an existing pod. This allows scaling pods up or down based on changing requirements. Note that this operation should be used carefully as it may affect the pod's performance and the server's available resources."
+  },
+  "response": [
+    {
+      "name": "Success Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"pod-101\",\n  \"requested\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 200\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/update",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["update"]
+        }
+      },
+      "status": "OK",
+      "code": 200,
+      "_postman_previewlanguage": "json",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "message": "Pod updated",
+        "pod": {
+          "pod_id": "pod-101",
+          "owner": "team-a",
+          "status": "running",
+          "timestamp": "2025-06-22T10:00:00Z",
+          "requested": {
+            "gpus": 1,
+            "ram_gb": 64,
+            "storage_gb": 200
+          }
+        }
+      }
+    }
+  ]
+} 

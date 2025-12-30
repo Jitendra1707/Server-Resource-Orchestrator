@@ -1,0 +1,62 @@
+{
+  "name": "POST Create Pod - Multiple Validation Errors",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"invalid-server\",\n  \"PodName\": \"TEST_POD\",\n  \"Resources\": \"invalid\",\n  \"image_url\": \"http://invalid-url\",\n  \"machine_ip\": \"\",\n  \"username\": \"\",\n  \"password\": \"\"\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/create",
+      "host": ["{{base_url}}"],
+      "path": ["create"]
+    },
+    "description": "Tests comprehensive validation error collection. This payload intentionally violates multiple validation rules simultaneously: missing/empty fields, invalid pod name (uppercase + underscore), invalid resources type, invalid image URL, and non-existent server. The API should collect ALL these errors and return them together, demonstrating the improved validation logic that doesn't stop at the first error."
+  },
+  "response": [
+    {
+      "name": "Validation Error Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/create",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["create"]
+        }
+      },
+      "status": "Bad Request",
+      "code": 400,
+      "_postman_previewlanguage": "json",
+      "header": [
+        { "key": "Content-Type", "value": "application/json" }
+      ],
+      "cookie": [],
+      "body": {
+        "type": "error",
+        "code": 400,
+        "message": "Multiple validation errors occurred.",
+        "details": [
+          "Server 'invalid-server' not found.",
+          "Pod name must be lowercase.",
+          "Pod name must not contain underscores.",
+          "Resources must be a dictionary/object.",
+          "Image URL must start with 'https://' and contain a version tag.",
+          "Owner is required.",
+          "Machine IP is required.",
+          "Username is required.",
+          "Password is required."
+        ]
+      }
+    }
+  ]
+} 

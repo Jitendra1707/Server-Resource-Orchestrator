@@ -1,0 +1,65 @@
+{
+  "servers": [
+    {
+      "id": "kubernetes-4-246-178-26",
+      "name": "Azure VM Kubernetes",
+      "type": "kubernetes",
+      "environment": "live",
+      "live_refresh_interval": 30,
+      "connection_coordinates": {
+        "method": "kubeconfig",
+        "host": "",
+        "port": 16443,
+        "username": "",
+        "kubeconfig_path": "",
+        "kubeconfig_data": {},
+        "insecure_skip_tls_verify": true,
+        "password": ""
+      },
+      "resources": {
+        "total": {
+          "cpus": 6,
+          "ram_gb": 110,
+          "storage_gb": 122,
+          "gpus": 0
+        },
+        "allocated": {
+          "cpus": 6,
+          "ram_gb": 128,
+          "storage_gb": 140,
+          "gpus": 0
+        },
+        "available": {
+          "cpus": 1.6999999999999997,
+          "ram_gb": 85.70000000000002,
+          "storage_gb": 100,
+          "gpus": 0
+        },
+        "actual_usage": {
+          "cpus": 0.05046163299999999,
+          "ram_gb": 2.0,
+          "storage_gb": 0.0,
+          "gpus": 0
+        }
+      },
+      "metadata": {
+        "location": "Kubernetes Server",
+        "environment": "live",
+        "description": "Kubernetes cluster on 4.246.178.26",
+        "setup_method": "api_automated",
+        "setup_timestamp": "2025-07-24T17:50:09.024446",
+        "configured_by": "api",
+        "last_updated": "2025-07-28T10:37:48.666786",
+        "live_data_fresh": true
+      },
+      "pods": [],
+      "status": "Online"
+    }
+  ],
+  "config": {
+    "ui_refresh_interval": 30,
+    "auto_refresh_enabled": true,
+    "last_refresh": null,
+    "last_live_refresh": "2025-07-28T10:37:48.682003"
+  }
+}

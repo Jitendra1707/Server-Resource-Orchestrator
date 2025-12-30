@@ -1,0 +1,242 @@
+<!-- Consistency/Error Message Area -->
+<!-- (Removed old consistencyMessage text display) -->
+<!-- Pod Creation Message Area -->
+<div *ngIf="podMessage"
+  [ngClass]="{'pod-message-success': podMessageType === 'success', 'pod-message-error': podMessageType === 'error'}"
+  class="pod-message" [innerHTML]="formattedPodMessage"></div>
+
+<!-- Header with title -->
+<div class="dashboard-header">
+  <div class="header-left">
+    <span class="dashboard-title">
+      Resource Manager
+    </span>
+  </div>
+</div>
+
+
+
+<!-- 1. Resource Information Card (Ribbon) -->
+<mat-card class="resource-info-ribbon">
+  <div class="resource-info-title">Resource Information</div>
+  <div class="ribbon-row">
+    <div class="ribbon-stat">
+      <div class="ribbon-label">Total Servers</div>
+      <div class="ribbon-value">{{ totalServers }}</div>
+    </div>
+    <div class="ribbon-stat">
+      <div class="ribbon-label">Actual RAM Usage</div>
+      <div class="ribbon-value">{{ actualRAMUsage }} / {{ totalRAM }} GB</div>
+    </div>
+    <div class="ribbon-stat">
+      <div class="ribbon-label">Actual CPU Usage</div>
+      <div class="ribbon-value">{{ actualCPUUsage }} / {{ totalCPUs }}</div>
+    </div>
+    <div class="ribbon-stat">
+      <div class="ribbon-label">Actual GPU Usage</div>
+      <div class="ribbon-value">{{ actualGPUUsage }} / {{ totalGPUs }}</div>
+    </div>
+  </div>
+  <div class="ribbon-row">
+    <div class="ribbon-stat">
+      <div class="ribbon-label">Total Pods</div>
+      <div class="ribbon-value">{{ totalPods }}</div>
+    </div>
+    <div class="ribbon-stat">
+      <div class="ribbon-label">Reserved RAM</div>
+      <div class="ribbon-value">{{ allocatedRAM }} / {{ totalRAM }} GB</div>
+    </div>
+    <div class="ribbon-stat">
+      <div class="ribbon-label">Reserved CPUs</div>
+      <div class="ribbon-value">{{ allocatedCPUs }} / {{ totalCPUs }}</div>
+    </div>
+    <div class="ribbon-stat">
+      <div class="ribbon-label">Reserved GPUs</div>
+      <div class="ribbon-value">{{ allocatedGPUs }} / {{ totalGPUs }}</div>
+    </div>
+  </div>
+</mat-card>
+
+<!-- 2. Choose a Server Card -->
+<mat-card class="choose-server-card">
+  <div class="choose-server-header">
+    <div class="choose-server-title">Choose a Server to Deploy Pod</div>
+    <div class="server-actions">
+      <button mat-raised-button color="primary" (click)="openServerConfigDialog()">
+        Configure Server
+      </button>
+    </div>
+  </div>
+  <div class="choose-server-row">
+    <!-- Loading indicator -->
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading servers...</p>
+    </div>
+    
+    <!-- Server cards -->
+    <mat-card *ngFor="let server of servers" class="server-sub-card"
+      [class.selected]="selectedServer && (server.server_id === selectedServer.server_id || server.id === selectedServer.id)"
+      [class.default]="!selectedServer && server === servers[0]"
+      [class.unselected]="selectedServer && (server.server_id !== selectedServer.server_id && server.id !== selectedServer.id)"
+      (click)="selectServer(server)">
+
+      <div class="server-name">{{ server.server_name || server.name }}</div>
+      <div class="server-ip">{{ server.metadata?.location || server.ip || 'N/A' }}</div>
+      <div class="server-status" [class.online]="server.status === 'Online'"
+        [class.offline]="server.status === 'Offline'">{{ server.status || 'Online' }}</div>
+      <div class="server-pods" *ngIf="server.pods">{{ server.pods.length }} pods</div>
+
+      <!-- Server Status LEDs - Bottom Row (Non-clickable) -->
+      <div class="server-status-leds">
+        <!-- Resource Integrity LED for this server -->
+        <div class="led-container disabled"
+          [title]="resourceIntegrityMessage || 'Resource integrity status unknown'">
+          <mat-icon class="led-icon">verified</mat-icon>
+          <span class="resource-integrity-led" [ngClass]="{
+            'led-green': resourceIntegrityMessage === 'Azure VM resource allocation is valid', 
+            'led-red': resourceIntegrityMessage && resourceIntegrityMessage !== 'Azure VM resource allocation is valid',
+            'led-grey': !resourceIntegrityMessage
+          }"></span>
+        </div>
+
+        <!-- Server Connection LED -->
+        <div class="led-container disabled"
+          [title]="'Server Connection: ' + (server.status || 'Online')">
+          <mat-icon class="led-icon">cloud</mat-icon>
+          <span class="server-status-led" [ngClass]="{
+            'led-green': server.status === 'Online', 
+            'led-red': server.status === 'Offline' || server.status === 'ERROR',
+            'led-grey': !server.status
+          }"></span>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</mat-card>
+
+<!-- 3. Server Overview Card -->
+<mat-card class="overview-card">
+  <div class="overview-title">Server Overview</div>
+  <div class="overview-desc">Detailed status and resource utilization of the selected Kubernetes server.</div>
+  <div style="max-height: 400px; overflow: auto;">
+    <table mat-table [dataSource]="selectedServer ? [selectedServer] : []" class="mat-elevation-z1">
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef> Actions </th>
+        <td mat-cell *matCellDef="let s">
+          <div class="action-buttons">
+            <button mat-icon-button color="primary" (click)="reconnectServer(s)" [disabled]="isReconnecting"
+              class="medium-icon-button" matTooltip="Reconnect server">
+              <mat-icon>refresh</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deconfigureServer(s)" class="medium-icon-button"
+              matTooltip="De-configure server">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef> Server Name </th>
+        <td mat-cell *matCellDef="let s">{{ s.server_name || s.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="ip">
+        <th mat-header-cell *matHeaderCellDef> Location </th>
+        <td mat-cell *matCellDef="let s">{{ s.metadata?.location || s.ip || 'N/A' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef> Status </th>
+        <td mat-cell *matCellDef="let s"><span [class.online]="s.status === 'Online'"
+            [class.offline]="s.status === 'Offline'">{{ s.status || 'Online' }}</span></td>
+      </ng-container>
+      <ng-container matColumnDef="pods">
+        <th mat-header-cell *matHeaderCellDef> Pods </th>
+        <td mat-cell *matCellDef="let s">{{ s.pods?.length || 0 }}</td>
+      </ng-container>
+      <ng-container matColumnDef="ram">
+        <th mat-header-cell *matHeaderCellDef> RAM </th>
+        <td mat-cell *matCellDef="let s">{{ s.resources?.total?.ram_gb || 0 }} GB</td>
+      </ng-container>
+      <ng-container matColumnDef="gpus">
+        <th mat-header-cell *matHeaderCellDef> GPUs </th>
+        <td mat-cell *matCellDef="let s">{{ s.resources?.total?.gpus || 0 }}</td>
+      </ng-container>
+      <ng-container matColumnDef="cpus">
+        <th mat-header-cell *matHeaderCellDef> CPUs </th>
+        <td mat-cell *matCellDef="let s">{{ s.resources?.total?.cpus || 0 }}</td>
+      </ng-container>
+      <tr mat-header-row
+        *matHeaderRowDef="['actions', 'name', 'ip', 'status', 'pods', 'ram', 'gpus', 'cpus']; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['actions', 'name', 'ip', 'status', 'pods', 'ram', 'gpus', 'cpus'];">
+      </tr>
+    </table>
+  </div>
+</mat-card>
+
+<!-- 4. Pod Overview Card -->
+<mat-card class="overview-card">
+  <div class="overview-header-row">
+    <div>
+      <div class="overview-title">Pod Overview</div>
+      <div class="overview-desc">Detailed status and resource utilization of pods from the selected server.</div>
+    </div>
+    <button mat-raised-button color="accent" (click)="openAddPodDialog()">
+      Deploy New Pod(s)
+    </button>
+  </div>
+  <div style="max-height: 400px; overflow: auto;">
+    <table mat-table [dataSource]="allPods" class="mat-elevation-z1">
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef> Actions </th>
+        <td mat-cell *matCellDef="let p">
+          <div class="action-buttons">
+            <button mat-icon-button color="primary" (click)="openEnvironmentVariableDialog(p)" class="small-icon-button">
+              <mat-icon>settings</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deletePod(p)" class="small-icon-button">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="pod_id">
+        <th mat-header-cell *matHeaderCellDef> Pod Name </th>
+        <td mat-cell *matCellDef="let p">{{ p.pod_id }}</td>
+      </ng-container>
+      <ng-container matColumnDef="server_name">
+        <th mat-header-cell *matHeaderCellDef> Server Name </th>
+        <td mat-cell *matCellDef="let p">{{ p.serverName }}</td>
+      </ng-container>
+      <ng-container matColumnDef="ram">
+        <th mat-header-cell *matHeaderCellDef> RAM </th>
+        <td mat-cell *matCellDef="let p">{{ p.requested?.ram_gb || 0 }} GB</td>
+      </ng-container>
+      <ng-container matColumnDef="gpus">
+        <th mat-header-cell *matHeaderCellDef> GPUs </th>
+        <td mat-cell *matCellDef="let p">{{ p.requested?.gpus || 0 }}</td>
+      </ng-container>
+      <ng-container matColumnDef="pod_ip">
+        <th mat-header-cell *matHeaderCellDef> Pod IP Address </th>
+        <td mat-cell *matCellDef="let p">
+          <span *ngIf="p.pod_ip" class="pod-ip">
+            {{ p.pod_ip }}
+          </span>
+          <span *ngIf="!p.pod_ip" class="no-ip">Not available</span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef> Status </th>
+        <td mat-cell *matCellDef="let p">
+          <span class="status-badge" [ngClass]="getStatusColor(p.status)">
+            <mat-icon>{{ getStatusIcon(p.status) }}</mat-icon>
+            {{ getStatusDisplayName(p.status) }}
+          </span>
+        </td>
+      </ng-container>
+      <tr mat-header-row
+        *matHeaderRowDef="['actions', 'pod_id', 'server_name', 'ram', 'gpus', 'pod_ip', 'status']; sticky: true"></tr>
+      <tr mat-row
+        *matRowDef="let row; columns: ['actions', 'pod_id', 'server_name', 'ram', 'gpus', 'pod_ip', 'status'];"></tr>
+    </table>
+  </div>
+</mat-card>

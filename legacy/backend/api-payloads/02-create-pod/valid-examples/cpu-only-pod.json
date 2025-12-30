@@ -1,0 +1,74 @@
+{
+  "name": "POST Create Pod - CPU Only Server",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"server-07\",\n  \"PodName\": \"cpupod123\",\n  \"Resources\": {\n    \"cpus\": 10,\n    \"ram_gb\": 40,\n    \"storage_gb\": 200\n  },\n  \"image_url\": \"https://docker.io/library/python:3.9-slim\",\n  \"machine_ip\": \"192.168.1.107\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\",\n  \"Owner\": \"cpu-team\"\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/create",
+      "host": ["{{base_url}}"],
+      "path": ["create"]
+    },
+    "description": "Creates a pod on a CPU-only server (server-07). This server has no GPUs but has CPUs, RAM, and storage. This example demonstrates resource allocation for different server types. The server-07 has 72 total CPUs, 192GB RAM, and 2000GB storage with 12 CPUs, 12GB RAM, and 500GB storage available."
+  },
+  "response": [
+    {
+      "name": "Success Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ServerName\": \"server-07\",\n  \"PodName\": \"cpupod123\",\n  \"Resources\": {\n    \"cpus\": 10,\n    \"ram_gb\": 40,\n    \"storage_gb\": 200\n  },\n  \"image_url\": \"https://docker.io/library/python:3.9-slim\",\n  \"machine_ip\": \"192.168.1.107\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\",\n  \"Owner\": \"cpu-team\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/create",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["create"]
+        }
+      },
+      "status": "OK",
+      "code": 200,
+      "_postman_previewlanguage": "json",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "message": "Pod created",
+        "pod": {
+          "pod_id": "cpupod123",
+          "owner": "cpu-team",
+          "status": "running",
+          "timestamp": "2025-01-15T10:30:00.000Z",
+          "requested": {
+            "cpus": 10,
+            "ram_gb": 40,
+            "storage_gb": 200
+          },
+          "image_url": "https://docker.io/library/python:3.9-slim",
+          "registery_url": "docker.io",
+          "image_name": "library/python",
+          "image_tag": "3.9-slim"
+        }
+      }
+    }
+  ]
+} 

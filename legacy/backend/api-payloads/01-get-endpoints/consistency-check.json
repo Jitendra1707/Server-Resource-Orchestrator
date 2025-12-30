@@ -1,0 +1,75 @@
+{
+  "name": "GET Consistency Check - Validate Data Integrity",
+  "request": {
+    "method": "GET",
+    "header": [],
+    "url": {
+      "raw": "{{base_url}}/consistency-check",
+      "host": ["{{base_url}}"],
+      "path": ["consistency-check"]
+    },
+    "description": "Performs data consistency validation across all servers and pods. Checks for resource allocation integrity, ensuring available resources don't exceed totals and pod resource sums are valid. This endpoint is crucial for maintaining data integrity in the resource management system."
+  },
+  "response": [
+    {
+      "name": "Consistent Data Response",
+      "originalRequest": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/consistency-check",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["consistency-check"]
+        }
+      },
+      "status": "OK",
+      "code": 200,
+      "_postman_previewlanguage": "json",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "type": "success",
+        "code": 200,
+        "message": "all data seems consistent"
+      }
+    },
+    {
+      "name": "Inconsistent Data Response",
+      "originalRequest": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/consistency-check",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["consistency-check"]
+        }
+      },
+      "status": "Bad Request",
+      "code": 400,
+      "_postman_previewlanguage": "json",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "type": "error",
+        "code": 400,
+        "message": "data inconsistency error",
+        "details": [
+          "Server gpu-node-h100-a: available gpus > total gpus",
+          "Server gpu-node-h100-a: sum of pod gpus > total gpus"
+        ]
+      }
+    }
+  ]
+} 

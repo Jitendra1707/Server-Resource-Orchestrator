@@ -1,0 +1,404 @@
+{
+  "info": {
+    "name": "Resource Manager API",
+    "description": "Complete API collection for the Resource Manager backend. This collection includes all endpoints for managing GPU/CPU servers and their associated pods with comprehensive validation and error handling.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET Endpoints",
+      "description": "Read-only operations for retrieving data and checking system status",
+      "item": [
+        {
+          "name": "GET Root Endpoint - API Documentation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            },
+            "description": "Returns HTML page with API documentation and available endpoints. This is useful for developers to understand the API structure and available operations."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Servers - List All Servers and Pods",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/servers",
+              "host": ["{{base_url}}"],
+              "path": ["servers"]
+            },
+            "description": "Retrieves all servers and their associated pods with current resource allocation status. This is the main data endpoint that provides the complete state of the resource management system."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Consistency Check - Validate Data Integrity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/consistency-check",
+              "host": ["{{base_url}}"],
+              "path": ["consistency-check"]
+            },
+            "description": "Performs data consistency validation across all servers and pods. Checks for resource allocation integrity, ensuring available resources don't exceed totals and pod resource sums are valid. This endpoint is crucial for maintaining data integrity in the resource management system."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "POST Create Pod",
+      "description": "Operations for creating new pods with comprehensive validation",
+      "item": [
+        {
+          "name": "Basic Valid Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"testpod123\",\n  \"Resources\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 100\n  },\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\",\n  \"Owner\": \"test-team\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/create",
+              "host": ["{{base_url}}"],
+              "path": ["create"]
+            },
+            "description": "Creates a new pod with valid parameters. This is the basic happy path scenario that should succeed. The pod will be deployed on server-01 with 1 GPU, 64GB RAM, and 100GB storage. The Owner field is optional and defaults to 'unknown' if not provided."
+          },
+          "response": []
+        },
+        {
+          "name": "CPU Only Server",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-07\",\n  \"PodName\": \"cpupod123\",\n  \"Resources\": {\n    \"cpus\": 10,\n    \"ram_gb\": 40,\n    \"storage_gb\": 200\n  },\n  \"image_url\": \"https://docker.io/library/python:3.9-slim\",\n  \"machine_ip\": \"192.168.1.107\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\",\n  \"Owner\": \"cpu-team\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/create",
+              "host": ["{{base_url}}"],
+              "path": ["create"]
+            },
+            "description": "Creates a pod on a CPU-only server (server-07). This server has no GPUs but has CPUs, RAM, and storage. This example demonstrates resource allocation for different server types."
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Required Fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"testpod\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/create",
+              "host": ["{{base_url}}"],
+              "path": ["create"]
+            },
+            "description": "Tests validation for missing required fields. This payload only includes ServerName and PodName, omitting Resources, image_url, machine_ip, username, and password. The API should return a comprehensive error message listing all missing fields."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Pod Name",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"TEST_POD\",\n  \"Resources\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 100\n  },\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/create",
+              "host": ["{{base_url}}"],
+              "path": ["create"]
+            },
+            "description": "Tests pod name validation rules. The pod name 'TEST_POD' violates two rules: it contains uppercase letters and underscores. The API should return both validation errors together."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Image URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"testpod\",\n  \"Resources\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 100\n  },\n  \"image_url\": \"http://invalid-url\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/create",
+              "host": ["{{base_url}}"],
+              "path": ["create"]
+            },
+            "description": "Tests image URL validation rules. The image URL 'http://invalid-url' violates the requirement to start with 'https://' and contain a version tag."
+          },
+          "response": []
+        },
+        {
+          "name": "Server Not Found",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"invalid-server\",\n  \"PodName\": \"testpod\",\n  \"Resources\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 100\n  },\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/create",
+              "host": ["{{base_url}}"],
+              "path": ["create"]
+            },
+            "description": "Tests server existence validation. The server name 'invalid-server' does not exist in the system. Valid server names are: server-01 through server-10."
+          },
+          "response": []
+        },
+        {
+          "name": "Insufficient Resources",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-03\",\n  \"PodName\": \"testpod\",\n  \"Resources\": {\n    \"gpus\": 10,\n    \"ram_gb\": 1000,\n    \"storage_gb\": 5000\n  },\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.103\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/create",
+              "host": ["{{base_url}}"],
+              "path": ["create"]
+            },
+            "description": "Tests resource availability validation. Server-03 has limited resources but the request asks for excessive resources. This demonstrates how the API prevents over-allocation."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Resources Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"testpod\",\n  \"Resources\": \"invalid\",\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/create",
+              "host": ["{{base_url}}"],
+              "path": ["create"]
+            },
+            "description": "Tests resources type validation. The Resources field is provided as a string instead of a JSON object. This demonstrates type checking."
+          },
+          "response": []
+        },
+        {
+          "name": "Multiple Validation Errors",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"invalid-server\",\n  \"PodName\": \"TEST_POD\",\n  \"Resources\": \"invalid\",\n  \"image_url\": \"http://invalid-url\",\n  \"machine_ip\": \"\",\n  \"username\": \"\",\n  \"password\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/create",
+              "host": ["{{base_url}}"],
+              "path": ["create"]
+            },
+            "description": "Tests comprehensive validation error collection. This payload intentionally violates multiple validation rules simultaneously. The API should collect ALL these errors and return them together."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "POST Delete Pod",
+      "description": "Operations for deleting existing pods and releasing resources",
+      "item": [
+        {
+          "name": "Basic Delete",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"PodName\": \"pod-101\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/delete",
+              "host": ["{{base_url}}"],
+              "path": ["delete"]
+            },
+            "description": "Deletes an existing pod by its name. This operation will release the allocated resources back to the server and remove the pod from the system. The pod must exist in the system for this operation to succeed."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "POST Update Pod",
+      "description": "Operations for updating existing pod properties",
+      "item": [
+        {
+          "name": "Update Owner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"pod-101\",\n  \"owner\": \"new-team\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/update",
+              "host": ["{{base_url}}"],
+              "path": ["update"]
+            },
+            "description": "Updates the owner of an existing pod. This is useful for transferring pod ownership between teams or users. The pod must exist on the specified server for this operation to succeed."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"pod-101\",\n  \"status\": \"stopped\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/update",
+              "host": ["{{base_url}}"],
+              "path": ["update"]
+            },
+            "description": "Updates the status of an existing pod. Common status values include 'running', 'stopped', 'error', 'pending', etc. This is useful for tracking pod lifecycle and operational state."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Resources",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"pod-101\",\n  \"requested\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 200\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/update",
+              "host": ["{{base_url}}"],
+              "path": ["update"]
+            },
+            "description": "Updates the resource allocation for an existing pod. This allows scaling pods up or down based on changing requirements. Note that this operation should be used carefully as it may affect the pod's performance and the server's available resources."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Image URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"pod-101\",\n  \"image_url\": \"https://docker.io/library/nginx:1.21\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/update",
+              "host": ["{{base_url}}"],
+              "path": ["update"]
+            },
+            "description": "Updates the Docker image URL for an existing pod. This is useful for upgrading or downgrading the container image version. The image URL must follow the same validation rules as during pod creation."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+} 

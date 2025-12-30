@@ -1,0 +1,59 @@
+{
+  "name": "POST Create Pod - Invalid Image URL",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"testpod\",\n  \"Resources\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 100\n  },\n  \"image_url\": \"http://invalid-url\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/create",
+      "host": ["{{base_url}}"],
+      "path": ["create"]
+    },
+    "description": "Tests image URL validation rules. The image URL 'http://invalid-url' violates the requirement to start with 'https://' and contain a version tag. This demonstrates the strict validation for Docker image URLs to ensure security and proper image specification."
+  },
+  "response": [
+    {
+      "name": "Validation Error Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"testpod\",\n  \"Resources\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 100\n  },\n  \"image_url\": \"http://invalid-url\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/create",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["create"]
+        }
+      },
+      "status": "Bad Request",
+      "code": 400,
+      "_postman_previewlanguage": "json",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "error": "Image URL must start with https:// and contain a version tag (e.g., :latest)."
+      }
+    }
+  ]
+} 

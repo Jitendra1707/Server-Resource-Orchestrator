@@ -1,0 +1,59 @@
+{
+  "name": "POST Create Pod - Basic Valid Example",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"testpod123\",\n  \"Resources\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 100\n  },\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\",\n  \"Owner\": \"test-team\"\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/create",
+      "host": ["{{base_url}}"],
+      "path": ["create"]
+    },
+    "description": "Creates a new pod with valid parameters. This is the basic happy path scenario that should succeed. The pod will be deployed on server-01 with 1 GPU, 64GB RAM, and 100GB storage. The Owner field is optional and defaults to 'unknown' if not provided."
+  },
+  "response": [
+    {
+      "name": "Success Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/create",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["create"]
+        }
+      },
+      "status": "OK",
+      "code": 200,
+      "_postman_previewlanguage": "json",
+      "header": [
+        { "key": "Content-Type", "value": "application/json" }
+      ],
+      "cookie": [],
+      "body": {
+        "type": "success",
+        "code": 200,
+        "message": "Pod created successfully.",
+        "pod": {
+          "pod_id": "testpod123",
+          "owner": "test-team",
+          "status": "running",
+          "timestamp": "2025-07-01T12:00:00Z",
+          "requested": { "gpus": 1, "ram_gb": 64, "storage_gb": 100 },
+          "image_url": "https://docker.io/library/nginx:latest"
+        }
+      }
+    }
+  ]
+} 

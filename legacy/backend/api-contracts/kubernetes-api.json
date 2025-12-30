@@ -1,0 +1,348 @@
+{
+  "name": "Kubernetes Resource Management API",
+  "version": "1.0.0",
+  "description": "API contract for Kubernetes pod and resource management",
+  "base_url": "http://localhost:5005",
+  "endpoints": {
+    "list_pods": {
+      "method": "GET",
+      "path": "/api/k8s/pods",
+      "description": "List all pods across all servers",
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "pods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique pod identifier"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Pod name"
+                },
+                "server_id": {
+                  "type": "string",
+                  "description": "Server where pod is deployed"
+                },
+                "server_name": {
+                  "type": "string",
+                  "description": "Server display name"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["running", "pending", "failed", "succeeded", "unknown"],
+                  "description": "Pod status"
+                },
+                "owner": {
+                  "type": "string",
+                  "description": "Pod owner/team"
+                },
+                "image_url": {
+                  "type": "string",
+                  "description": "Container image URL"
+                },
+                "resources": {
+                  "type": "object",
+                  "properties": {
+                    "gpus": {
+                      "type": "integer",
+                      "description": "Number of GPUs allocated"
+                    },
+                    "ram_gb": {
+                      "type": "integer",
+                      "description": "RAM allocated in GB"
+                    },
+                    "storage_gb": {
+                      "type": "integer",
+                      "description": "Storage allocated in GB"
+                    }
+                  }
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Pod creation timestamp"
+                },
+                "metadata": {
+                  "type": "object",
+                  "properties": {
+                    "namespace": {
+                      "type": "string",
+                      "description": "Kubernetes namespace"
+                    },
+                    "labels": {
+                      "type": "object",
+                      "description": "Pod labels"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "create_pod": {
+      "method": "POST",
+      "path": "/api/k8s/pods",
+      "description": "Create a new pod",
+      "request": {
+        "type": "object",
+        "required": ["server_id", "name", "resources"],
+        "properties": {
+          "server_id": {
+            "type": "string",
+            "description": "Target server for pod deployment"
+          },
+          "name": {
+            "type": "string",
+            "description": "Pod name (must be unique)"
+          },
+          "resources": {
+            "type": "object",
+            "required": ["gpus", "ram_gb", "storage_gb"],
+            "properties": {
+              "gpus": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of GPUs required"
+              },
+              "ram_gb": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "RAM required in GB"
+              },
+              "storage_gb": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Storage required in GB"
+              }
+            }
+          },
+          "owner": {
+            "type": "string",
+            "default": "unknown",
+            "description": "Pod owner/team"
+          },
+          "image_url": {
+            "type": "string",
+            "default": "nginx:latest",
+            "description": "Container image URL"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional pod description"
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "pod_id": {
+            "type": "string",
+            "description": "Generated pod identifier"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success/error message"
+          },
+          "pod": {
+            "type": "object",
+            "description": "Created pod details"
+          }
+        }
+      }
+    },
+    "update_pod": {
+      "method": "PUT",
+      "path": "/api/k8s/pods/{pod_id}",
+      "description": "Update an existing pod",
+      "parameters": {
+        "pod_id": {
+          "type": "string",
+          "description": "Pod identifier to update"
+        }
+      },
+      "request": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "New pod owner"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "New container image URL"
+          },
+          "resources": {
+            "type": "object",
+            "properties": {
+              "gpus": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "ram_gb": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "storage_gb": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "New pod description"
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "pod": {
+            "type": "object",
+            "description": "Updated pod details"
+          }
+        }
+      }
+    },
+    "delete_pod": {
+      "method": "DELETE",
+      "path": "/api/k8s/pods/{pod_id}",
+      "description": "Delete a pod",
+      "parameters": {
+        "pod_id": {
+          "type": "string",
+          "description": "Pod identifier to delete"
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "get_pod": {
+      "method": "GET",
+      "path": "/api/k8s/pods/{pod_id}",
+      "description": "Get specific pod details",
+      "parameters": {
+        "pod_id": {
+          "type": "string",
+          "description": "Pod identifier"
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "pod": {
+            "type": "object",
+            "description": "Pod details"
+          }
+        }
+      }
+    }
+  },
+  "error_responses": {
+    "400": {
+      "description": "Bad Request - Invalid input data",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "404": {
+      "description": "Not Found - Pod or server not found",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "409": {
+      "description": "Conflict - Resource allocation conflict",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "available_resources": {
+                "type": "object"
+              },
+              "requested_resources": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "500": {
+      "description": "Internal Server Error",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+} 

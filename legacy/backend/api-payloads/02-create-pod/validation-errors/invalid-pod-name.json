@@ -1,0 +1,59 @@
+{
+  "name": "POST Create Pod - Invalid Pod Name",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"TEST_POD\",\n  \"Resources\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 100\n  },\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/create",
+      "host": ["{{base_url}}"],
+      "path": ["create"]
+    },
+    "description": "Tests pod name validation rules. The pod name 'TEST_POD' violates two rules: it contains uppercase letters and underscores. The API should return both validation errors together, demonstrating the comprehensive error collection feature."
+  },
+  "response": [
+    {
+      "name": "Validation Error Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"TEST_POD\",\n  \"Resources\": {\n    \"gpus\": 1,\n    \"ram_gb\": 64,\n    \"storage_gb\": 100\n  },\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.100\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/create",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["create"]
+        }
+      },
+      "status": "Bad Request",
+      "code": 400,
+      "_postman_previewlanguage": "json",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "error": "Pod name must be lowercase. | Pod name must not contain underscores."
+      }
+    }
+  ]
+} 

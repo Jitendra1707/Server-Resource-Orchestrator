@@ -1,0 +1,19 @@
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Pastel background and dialog overrides */
+body, .mat-app-background {
+  background: #faf7ff !important;
+}
+.mat-dialog-container {
+  background: #fff !important;
+  color: #222b45 !important;
+  border-radius: 24px !important;
+  box-shadow: 0 2px 24px rgba(109,40,217,0.10) !important;
+}
+.cdk-overlay-backdrop {
+  background: rgba(109, 40, 217, 0.06) !important;
+  opacity: 1 !important;
+}

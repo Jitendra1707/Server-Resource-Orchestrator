@@ -1,0 +1,6 @@
+flask
+flask-cors
+kubernetes
+flasgger
+paramiko
+pyyaml

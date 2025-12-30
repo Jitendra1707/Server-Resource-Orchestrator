@@ -1,0 +1,42 @@
+{
+  "name": "GET Root Endpoint - API Documentation",
+  "request": {
+    "method": "GET",
+    "header": [],
+    "url": {
+      "raw": "{{base_url}}/",
+      "host": ["{{base_url}}"],
+      "path": [""]
+    },
+    "description": "Returns HTML page with API documentation and available endpoints. This is useful for developers to understand the API structure and available operations."
+  },
+  "response": [
+    {
+      "name": "Success Response",
+      "originalRequest": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": [""]
+        }
+      },
+      "code": 200,
+      "_postman_previewlanguage": "html",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "text/html; charset=utf-8"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "type": "success",
+        "code": 200,
+        "message": "<h1>🎉 Resource Manager Backend is Running! 🎉</h1><p>Welcome! Available API endpoints:</p><ul><li><b>GET /servers</b> - List all servers and pods</li><li><b>POST /create</b> - Create a new pod (JSON body required)</li><li><b>POST /delete</b> - Delete a pod (JSON body required)</li><li><b>POST /update</b> - Update a pod (JSON body required)</li><li><b>GET /consistency-check</b> - Check for data consistency</li></ul><p>See the frontend UI for a friendly interface.</p>"
+      }
+    }
+  ]
+} 

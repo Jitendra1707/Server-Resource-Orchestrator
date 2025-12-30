@@ -1,0 +1,70 @@
+{
+  "name": "POST Update Pod - Update Status",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"pod-101\",\n  \"status\": \"stopped\"\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/update",
+      "host": ["{{base_url}}"],
+      "path": ["update"]
+    },
+    "description": "Updates the status of an existing pod. Common status values include 'running', 'stopped', 'error', 'pending', etc. This is useful for tracking pod lifecycle and operational state."
+  },
+  "response": [
+    {
+      "name": "Success Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"pod-101\",\n  \"status\": \"stopped\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/update",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["update"]
+        }
+      },
+      "status": "OK",
+      "code": 200,
+      "_postman_previewlanguage": "json",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "message": "Pod updated",
+        "pod": {
+          "pod_id": "pod-101",
+          "owner": "team-a",
+          "status": "stopped",
+          "timestamp": "2025-06-22T10:00:00Z",
+          "requested": {
+            "gpus": 2,
+            "ram_gb": 128,
+            "storage_gb": 500
+          }
+        }
+      }
+    }
+  ]
+} 

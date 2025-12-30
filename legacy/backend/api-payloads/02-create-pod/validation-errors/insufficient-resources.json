@@ -1,0 +1,59 @@
+{
+  "name": "POST Create Pod - Insufficient Resources",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"server-03\",\n  \"PodName\": \"testpod\",\n  \"Resources\": {\n    \"gpus\": 10,\n    \"ram_gb\": 1000,\n    \"storage_gb\": 5000\n  },\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.103\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/create",
+      "host": ["{{base_url}}"],
+      "path": ["create"]
+    },
+    "description": "Tests resource availability validation. Server-03 has limited resources (1 GPU, 56GB RAM, 548GB storage available) but the request asks for 10 GPUs, 1000GB RAM, and 5000GB storage. This demonstrates how the API prevents over-allocation of resources and provides specific error messages about which resources are insufficient."
+  },
+  "response": [
+    {
+      "name": "Validation Error Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ServerName\": \"server-03\",\n  \"PodName\": \"testpod\",\n  \"Resources\": {\n    \"gpus\": 10,\n    \"ram_gb\": 1000,\n    \"storage_gb\": 5000\n  },\n  \"image_url\": \"https://docker.io/library/nginx:latest\",\n  \"machine_ip\": \"192.168.1.103\",\n  \"username\": \"ubuntu\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/create",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["create"]
+        }
+      },
+      "status": "Bad Request",
+      "code": 400,
+      "_postman_previewlanguage": "json",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "error": "Not enough gpus available. Requested: 10, Available: 1"
+      }
+    }
+  ]
+} 

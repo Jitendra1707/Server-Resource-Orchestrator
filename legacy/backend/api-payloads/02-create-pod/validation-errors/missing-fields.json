@@ -1,0 +1,59 @@
+{
+  "name": "POST Create Pod - Missing Required Fields",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"testpod\"\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/create",
+      "host": ["{{base_url}}"],
+      "path": ["create"]
+    },
+    "description": "Tests validation for missing required fields. This payload only includes ServerName and PodName, omitting Resources, image_url, machine_ip, username, and password. The API should return a comprehensive error message listing all missing fields."
+  },
+  "response": [
+    {
+      "name": "Validation Error Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"testpod\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/create",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["create"]
+        }
+      },
+      "status": "Bad Request",
+      "code": 400,
+      "_postman_previewlanguage": "json",
+      "header": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "cookie": [],
+      "body": {
+        "error": "Missing or empty fields: Resources, image_url, machine_ip, username, password"
+      }
+    }
+  ]
+} 

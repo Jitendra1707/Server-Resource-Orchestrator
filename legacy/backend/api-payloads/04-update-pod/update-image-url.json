@@ -1,0 +1,59 @@
+{
+  "name": "POST Update Pod - Update Image URL",
+  "request": {
+    "method": "POST",
+    "header": [
+      {
+        "key": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"ServerName\": \"server-01\",\n  \"PodName\": \"pod-101\",\n  \"image_url\": \"https://docker.io/library/nginx:1.21\"\n}"
+    },
+    "url": {
+      "raw": "{{base_url}}/update",
+      "host": ["{{base_url}}"],
+      "path": ["update"]
+    },
+    "description": "Updates the Docker image URL for an existing pod. This is useful for upgrading or downgrading the container image version. The image URL must follow the same validation rules as during pod creation (https:// protocol and version tag)."
+  },
+  "response": [
+    {
+      "name": "Success Response",
+      "originalRequest": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/update",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["update"]
+        }
+      },
+      "status": "OK",
+      "code": 200,
+      "_postman_previewlanguage": "json",
+      "header": [
+        { "key": "Content-Type", "value": "application/json" }
+      ],
+      "cookie": [],
+      "body": {
+        "type": "success",
+        "code": 200,
+        "message": "Pod updated",
+        "pod": {
+          "pod_id": "pod-101",
+          "owner": "test-team",
+          "status": "running",
+          "timestamp": "2025-07-01T12:00:00Z",
+          "requested": { "gpus": 1, "ram_gb": 64, "storage_gb": 100 },
+          "image_url": "https://docker.io/library/nginx:1.21"
+        }
+      }
+    }
+  ]
+} 

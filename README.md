@@ -7,13 +7,14 @@ A professional Onprem or cloud server resource management system designed for hi
 - **Kubernetes Management**: Create, update, and delete pods across multiple clusters.
 - **Health Monitoring**: Real-time status tracking for pods/servers and Kubernetes resources.
 - **Resource Allocation**: Fine-grained control over GPU, RAM, and Storage for your workloads.
+- **Runtime Security Scanning**: Integrated **Trivy** scanning for container images directly from the management interface.
 - **Independent Architecture**: Decoupled Frontend and Backend for independent scaling and deployment.
 
 ## 🏗️ Tech Stack
 
 - **Backend**: Python, Flask, Kubernetes Client (Primary Management SDK)
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla/Modern JS)
-- **Monitoring**: MicroK8s, SSH Integration
+- **Security & Monitoring**: MicroK8s, SSH Integration, **Trivy** (Container Scanning)
 
 ## 📁 Project Structure
 
